@@ -51,25 +51,27 @@ export default function ConnectionsSubmission({ onSubmitted, todaysSubmission })
         <section className="bg-[#1c1c24] border border-white/10 rounded-2xl p-6 mb-10">
             <div className="mb-5">
                 <h2 className="text-xl font-semibold">
-                    Submit a Connections Result
+                    Connections
                 </h2>
                 <p className="text-gray-400 text-sm mt-2">
-                    Copy your Connections results and paste them below to earn SAND.
+                    Copy your Connections results and paste them below.
                 </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col">
                 <div>
-                    <label className="block text-sm text-gray-300 mb-2">
+                    {/* <label className="block text-sm text-gray-300 mb-2">
                         Connections Results
-                    </label>
+                    </label> */}
 
                     <textarea
-                        value={rawResult}
+                        value={submittedResult ? todaysSubmission.raw_result : rawResult}
                         onChange={(e) => setRawResult(e.target.value)}
+                        readOnly={!!submittedResult}
                         placeholder={"Connections\nPuzzle #1245\n\n🟨🟨🟨🟨\n🟪🟦🟦🟪\n🟪🟦🟩🟩\n🟩🟦🟪🟦\n🟩🟪🟩🟪"}
                         rows={8}
-                        className="w-full bg-[#101014] border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 resize-y font-mono text-sm"
+                        className={`w-full bg-[#101014] border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 font-mono text-sm 
+                            ${submittedResult ? "bg-gray-100 dark:bg-gray-800 opacity-80 resize-none" : "resize-y"}`}
                         required
                     />
                 </div>
@@ -82,14 +84,14 @@ export default function ConnectionsSubmission({ onSubmitted, todaysSubmission })
 
                 {submittedResult && (
                     <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-                        <p className="text-green-400 font-semibold">
+                        {/* <p className="text-green-400 font-semibold">
                             Connections submitted successfully!
+                        </p> */}
+                        <p className="text-green-400 font-bold text-lg mt-2">
+                           +{submittedResult.reward_amount} SAND
                         </p>
                         <p className="text-gray-400 text-sm mt-2">
                             Puzzle #{submittedResult.result_data?.puzzle_number}
-                        </p>
-                        <p className="text-green-400 font-bold text-lg mt-2">
-                           +{submittedResult.reward_amount} SAND
                         </p>
                     </div>
                 )}

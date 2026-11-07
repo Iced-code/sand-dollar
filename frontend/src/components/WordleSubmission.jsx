@@ -1,15 +1,6 @@
-
 import { useState } from "react";
 import { apiFetch } from "../api/client";
 
-/* function getLocalDate() {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-} */
 
 export default function WordleSubmission({ onSubmitted, todaysSubmission }) {
     const [rawResult, setRawResult] = useState("");
@@ -60,25 +51,23 @@ export default function WordleSubmission({ onSubmitted, todaysSubmission }) {
         <section className="bg-[#1c1c24] border border-white/10 rounded-2xl p-6 h-full flex flex-col">
             <div className="mb-5">
                 <h2 className="text-xl font-semibold">
-                    Submit a Wordle Result
+                    Wordle
                 </h2>
                 <p className="text-gray-400 text-sm mt-2">
-                    Copy your Wordle results and paste them below to earn SAND.
+                    Copy your Wordle results and paste them below.
                 </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col">
                 <div>
-                    <label className="block text-sm text-gray-300 mb-2">
-                        Wordle Results
-                    </label>
-
                     <textarea
-                        value={rawResult}
+                        value={submittedResult ? todaysSubmission.raw_result : rawResult}
                         onChange={(e) => setRawResult(e.target.value)}
+                        readOnly={!!submittedResult}
                         placeholder={"Wordle 1,234 5/6\n\n⬛🟨⬛⬛⬛\n⬛🟨⬛⬛🟩\n🟨🟩⬛⬛🟩\n🟩🟩🟨⬛🟩\n🟩🟩🟩🟩🟩"}
                         rows={7}
-                        className="w-full bg-[#101014] border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 resize-y font-mono text-sm"
+                        className={`w-full bg-[#101014] border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 font-mono text-sm 
+                            ${submittedResult ? "bg-gray-100 dark:bg-gray-800 opacity-80 resize-none" : "resize-y"}`}
                         required
                     />
                 </div>
@@ -91,15 +80,16 @@ export default function WordleSubmission({ onSubmitted, todaysSubmission }) {
 
                 {submittedResult && (
                     <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-                        <p className="text-green-400 font-semibold">
+                        {/* <p className="text-green-400 font-semibold">
                             Wordle submitted successfully!
+                        </p> */}
+                        <p className="text-green-400 font-bold text-lg mt-2">
+                           +{submittedResult.reward_amount} SAND
                         </p>
                         <p className="text-gray-400 text-sm mt-2">
                             Puzzle #{submittedResult.result_data?.puzzle_number}
                         </p>
-                        <p className="text-green-400 font-bold text-lg mt-2">
-                           +{submittedResult.reward_amount} SAND
-                        </p>
+                        
                     </div>
                 )}
 

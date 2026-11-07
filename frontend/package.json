@@ -12,6 +12,8 @@
   "dependencies": {
     "@solana-program/token": "^0.18.0",
     "@solana/kit": "^8.6.0",
+    "@solana/kit-plugin-rpc": "^0.23.0",
+    "@solana/kit-plugin-wallet": "^0.23.0",
     "@solana/react": "^8.6.0",
     "@solana/wallet-adapter-base": "^0.9.28",
     "lucide-react": "^1.70.0",
