@@ -11,7 +11,6 @@ class UserResponse(BaseModel):
 
 class SubmissionCreate(BaseModel):
     raw_result: str
-    puzzle_date: date
 
 class SubmissionResponse(BaseModel):
     id: int

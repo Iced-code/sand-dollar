@@ -40,7 +40,7 @@ class WordleParser:
         puzzle_number = int(match.group(1).replace(",", ""))
         attempts_text = match.group(2)
 
-        won = attempts_text.upper != "X"
+        won = attempts_text.upper() != "X"
         attempts = int(attempts_text) if won else 6
 
         grid_lines = lines[1:]

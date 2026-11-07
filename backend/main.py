@@ -14,7 +14,9 @@ from database import test_connection, Base, engine, get_db
 from models import User, Game, Submission
 from schemas import UserResponse, SubmissionCreate, SubmissionResponse
 from parsers.wordle import WordleParser
-from services.rewards import calculate_wordle_reward
+from parsers.connections import ConnectionsParser
+from services.rewards import calculate_wordle_reward, calculate_connections_reward
+from services.puzzle_validation import validate_today_wordle, validate_today_connections
 
 app = FastAPI()
 
@@ -104,11 +106,18 @@ def submit_wordle(submission: SubmissionCreate, user_id: UUID = Header(..., alia
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    try:
+        official_date = validate_today_wordle(result["puzzle_number"])
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
     # Check for an existing submission
     existing_game = db.query(Submission).filter(
         Submission.user_id == user.id,
         Submission.game_id == game.id,
-        Submission.puzzle_date == submission.puzzle_date
+        Submission.puzzle_date == official_date
     ).first()
 
     if existing_game:
@@ -119,7 +128,7 @@ def submit_wordle(submission: SubmissionCreate, user_id: UUID = Header(..., alia
     new_submission = Submission(
         user_id=user.id,
         game_id=game.id,
-        puzzle_date=submission.puzzle_date,
+        puzzle_date=official_date,
         raw_result=submission.raw_result,
         result_data=result,
         reward_amount=reward
@@ -132,6 +141,68 @@ def submit_wordle(submission: SubmissionCreate, user_id: UUID = Header(..., alia
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=409, detail="You have already submitted this Wordle puzzle")
+
+    return new_submission
+
+@app.post("/games/connections/submit", response_model=SubmissionResponse)
+def submit_connections(submission: SubmissionCreate, user_id: UUID = Header(..., alias="X-User-ID"), db: Session = Depends(get_db)):
+
+    # Find user
+    user = db.query(User).filter(
+        User.public_id == str(user_id)
+    ).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Find Connections game
+    game = db.query(Game).filter(
+            Game.slug == "connections",
+            Game.is_active == True
+        ).first()
+    if not game:
+        raise HTTPException(status_code=404, detail="Connections is unavailable")
+
+    # Parse pasted Connections result
+    try:
+        result = ConnectionsParser.parse(submission.raw_result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    try:
+        official_date = validate_today_connections(result["puzzle_number"])
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+    # Check for an existing submission
+    existing_game = db.query(Submission).filter(
+        Submission.user_id == user.id,
+        Submission.game_id == game.id,
+        Submission.puzzle_date == official_date
+    ).first()
+
+    if existing_game:
+        raise HTTPException(status_code=409, detail="You have already submitted this Connections puzzle")
+
+    reward = calculate_connections_reward(result=result)
+
+    new_submission = Submission(
+        user_id=user.id,
+        game_id=game.id,
+        puzzle_date=official_date,
+        raw_result=submission.raw_result,
+        result_data=result,
+        reward_amount=reward
+    )
+
+    try:
+        db.add(new_submission)
+        db.commit()
+        db.refresh(new_submission)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="You have already submitted this Connections puzzle")
 
     return new_submission
 

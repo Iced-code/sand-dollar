@@ -1,7 +1,24 @@
+
 import { useEffect, useState } from "react";
 import { apiFetch } from "../api/client";
 
 import WordleSubmission from "./WordleSubmission";
+import ConnectionsSubmission from "./ConnectionsSubmission";
+
+function getTodaysDate() {
+    const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }).formatToParts(new Date());
+
+    const values = Object.fromEntries(
+        parts.map(part => [part.type, part.value])
+    );
+
+    return `${values.year}-${values.month}-${values.day}`;
+}
 
 export default function Dashboard() {
     const [user, setUser] = useState(null);
@@ -36,6 +53,7 @@ export default function Dashboard() {
     if (loading) {
         return <div className="p-8 text-center">Loading dashboard...</div>;
     }
+
     if (error) {
         return <div className="p-8 text-red-500">Error: {error}</div>;
     }
@@ -48,6 +66,41 @@ export default function Dashboard() {
 
         const updatedBalance = await apiFetch("/users/me/balance");
         setBalance(updatedBalance);
+    }
+
+    const today = getTodaysDate();
+    const wordleTodaySubmission = submissions.find(
+        submission => submission.puzzle_date === today && submission.result_data.game.toLowerCase() === "wordle"
+    );
+    const connectionsTodaySubmission = submissions.find(
+        submission => submission.puzzle_date === today && submission.result_data.game.toLowerCase() === "connections"
+    );
+
+    function getGameName(submission) {
+        return submission.result_data.game
+        /* return submission.result_data.game === "Connections"
+            ? "Connections"
+            : "Wordle"; */
+    }
+
+    function getSubmissionTitle(submission) {
+        const gameName = getGameName(submission);
+        return `${gameName} #${submission.result_data.puzzle_number}`;
+    }
+
+    function getSubmissionDescription(submission) {
+        const result = submission.result_data;
+
+        if (getGameName(submission) === "Connections") {
+            return result.won
+                ? `Solved all 4 categories with ${result.mistakes} mistakes`
+                : `${result.solved_categories}/4 categories solved`;
+        }
+        else if (getGameName(submission) === "Wordle") {
+            return result.won
+                ? `Solved in ${result.attempts}/6 attempts`
+                : "Not solved";
+        }
     }
 
     return (
@@ -103,8 +156,39 @@ export default function Dashboard() {
 
                 </section>
 
+                {/* Submission forms */}
+                {/* <WordleSubmission onSubmitted={handleSubmissionCreated} />
+                <ConnectionsSubmission onSubmitted={handleSubmissionCreated} /> */}
 
-                <WordleSubmission onSubmitted={handleSubmissionCreated} />
+                {/* Game Cards */}
+                <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
+
+                    <WordleSubmission
+                        onSubmitted={handleSubmissionCreated}
+                        todaysSubmission={wordleTodaySubmission}
+                    />
+
+                    <ConnectionsSubmission
+                        onSubmitted={handleSubmissionCreated}
+                        todaysSubmission={connectionsTodaySubmission}
+                    />
+
+                    {/* Future Game Card */}
+                    <div className="bg-[#1c1c24] border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[350px] border-dashed">
+                        <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                            <span className="text-3xl text-gray-500">+</span>
+                        </div>
+
+                        <h2 className="text-lg font-semibold text-gray-400">
+                            More Games Coming Soon
+                        </h2>
+
+                        <p className="text-gray-500 text-sm mt-2 text-center">
+                            More ways to earn SAND are on the way.
+                        </p>
+                    </div>
+
+                </section>
 
                 {/* Submission history */}
                 <section>
@@ -133,7 +217,7 @@ export default function Dashboard() {
                                 >
                                     <div>
                                         <h3 className="font-semibold">
-                                            Wordle #{submission.result_data.puzzle_number}
+                                            {getSubmissionTitle(submission)}
                                         </h3>
 
                                         <p className="text-gray-400 text-sm mt-1">
@@ -143,9 +227,7 @@ export default function Dashboard() {
                                         </p>
 
                                         <p className="text-gray-500 text-sm mt-1">
-                                            {submission.result_data.won
-                                                ? `Solved in ${submission.result_data.attempts}/6 attempts`
-                                                : "Not solved"}
+                                            {getSubmissionDescription(submission)}
                                         </p>
                                     </div>
 
