@@ -9,6 +9,8 @@ class User(Base):
     username = Column(String(30), nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
+    wallet_address = Column(String(44, collation="ascii_bin"), unique=True, nullable=False)
+
 class Game(Base):
     __tablename__ = "games"
 
@@ -40,3 +42,18 @@ class Submission(Base):
     reward_amount = Column(Integer, default=0, nullable=False)
 
     submitted_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+class WalletChallenge(Base):
+    __tablename__ = "wallet_challenges"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    wallet_address = Column(String(44), nullable=False)
+    nonce = Column(String(64), unique=True, nullable=False)
+    message = Column(Text, nullable=False)
+
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)

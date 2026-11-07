@@ -7,6 +7,8 @@ class UserResponse(BaseModel):
     username: str
     created_at: datetime
 
+    wallet_address: str | None = None
+
     model_config = ConfigDict(from_attributes=True)
 
 class SubmissionCreate(BaseModel):
@@ -20,3 +22,11 @@ class SubmissionResponse(BaseModel):
     submitted_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class WalletChallengeRequest(BaseModel):
+    wallet_address: str
+
+class WalletVerifyRequest(BaseModel):
+    challenge_id: int
+    wallet_address: str
+    signature: str

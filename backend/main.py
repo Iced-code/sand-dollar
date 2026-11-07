@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import FastAPI, Depends, Header, HTTPException
@@ -11,12 +11,19 @@ from sqlalchemy.exc import IntegrityError
 from typing import List
 
 from database import test_connection, Base, engine, get_db
-from models import User, Game, Submission
-from schemas import UserResponse, SubmissionCreate, SubmissionResponse
+from models import User, Game, Submission, WalletChallenge
+from schemas import UserResponse, SubmissionCreate, SubmissionResponse, WalletChallengeRequest, WalletVerifyRequest
 from parsers.wordle import WordleParser
 from parsers.connections import ConnectionsParser
 from services.rewards import calculate_wordle_reward, calculate_connections_reward
 from services.puzzle_validation import validate_today_wordle, validate_today_connections
+
+import secrets
+import base64, base58
+
+from nacl.signing import VerifyKey
+from nacl.exceptions import BadSignatureError
+
 
 app = FastAPI()
 
@@ -235,3 +242,114 @@ def get_user_submissions(user_id: UUID = Header(..., alias="X-User-ID"), db: Ses
                   ).order_by(Submission.submitted_at.desc()).all()
         
     return submissions
+
+@app.post("/wallet/challenge")
+def create_wallet_challenge(request: WalletChallengeRequest, user_id: UUID = Header(..., alias="X-User-ID"), db: Session = Depends(get_db)):
+    user = db.query(User).filter(
+        User.public_id == str(user_id)
+    ).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    valid_characters = ("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
+
+    address = request.wallet_address
+
+    if not 32 <= len(address) <= 44 or not all(char in valid_characters for char in address):
+        raise HTTPException(status_code=400, detail="Invalid Solana wallet address")
+
+    wallet = db.query(User).filter(
+        User.wallet_address == address
+    ).first()
+
+    if wallet and wallet.id != user.id:
+        raise HTTPException(status_code=409, detail="This wallet is already linked to another account")
+    if user.wallet_address and user.wallet_address != address:
+            raise HTTPException(status_code=409, detail="This wallet is already linked to another account")
+
+    nonce = secrets.token_urlsafe(32)
+
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    expires_at = now + timedelta(minutes=5)
+
+    message = (
+        f"Sand Dollar Wallet Verification\n\n"
+        f"Account: {user.public_id}\n"
+        f"Wallet: {address}\n"
+        f"Nonce: {nonce}\n"
+        f"Expires: {expires_at.isoformat()} UTC\n\n"
+        "Sign this message to link this wallet to your Sand Dollar account."
+    )
+
+    challenge = WalletChallenge(
+        user_id=user.id,
+        wallet_address=address,
+        nonce=nonce,
+        message=message,
+        expires_at=expires_at
+    )
+
+    db.add(challenge)
+    db.commit()
+    db.refresh(challenge)
+
+    return {
+        "challenge_id": challenge.id,
+        "message": challenge.message,
+        "expires_at": challenge.expires_at
+    }
+
+@app.post("/wallet/verify")
+def verify_wallet(request: WalletVerifyRequest, user_id: UUID = Header(..., alias="X-User-ID"), db: Session = Depends(get_db)):
+    user = db.query(User).filter(
+        User.public_id == str(user_id)
+    ).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    challenge = db.query(WalletChallenge).filter(
+        WalletChallenge.id == request.challenge_id,
+        WalletChallenge.user_id == user.id,
+        WalletChallenge.wallet_address == request.wallet_address,
+    ).with_for_update().first()
+
+    if not challenge:
+        raise HTTPException(status_code=404, detail="Wallet challenge not found")
+    if challenge.used_at is not None:
+        raise HTTPException(status_code=400, detail="Challenge has already been used")
+
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    if challenge.expires_at <= now:
+        raise HTTPException(status_code=400, detail="Challenge has expired")
+
+    wallet = db.query(User).filter(
+            User.wallet_address == request.wallet_address
+        ).first()
+    if wallet and wallet.id != user.id:
+        raise HTTPException(status_code=409, detail="Wallet is already linked to another account")
+
+    try:
+        public_key = base58.b58decode(request.wallet_address)
+        if len(public_key) != 32:
+            raise ValueError("Invalid public key length")
+
+        signature = base64.b64decode(request.signature, validate=True)
+        if len(signature) != 64:
+            raise ValueError("Invalid signature length")
+
+        verify_key = VerifyKey(public_key)
+        verify_key.verify(challenge.message.encode("utf-8"), signature)
+    except (ValueError, BadSignatureError):
+        raise HTTPException(status_code=400, detail="Invalid wallet signature")
+
+    user.wallet_address = request.wallet_address
+
+    challenge.used_at = now
+
+    db.commit()
+
+    return {
+        "message": "Wallet successfully linked",
+        "wallet_address": user.wallet_address
+    }

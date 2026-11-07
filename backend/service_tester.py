@@ -111,3 +111,20 @@ https://krillion.io
 ⬛🟨⬛⬛⬛ 1️⃣0️⃣
 Play #hardle on hardle.org
 """
+
+
+"""$headers = @{
+    "X-User-ID" = "0b9de5fe-98cd-4160-b0c9-a191d8734115"
+}
+
+$body = @{
+    wallet_address = "6AVUdzEBu6CAEKRyxh7tu34ctZo6q98q5CJvPU6c96Z5"
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+    -Uri "http://127.0.0.1:8000/wallet/challenge" `
+    -Method POST `
+    -Headers $headers `
+    -ContentType "application/json" `
+    -Body $body
+"""
