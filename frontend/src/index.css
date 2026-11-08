@@ -52,10 +52,38 @@ body {
   color: #1a7560;
 }
 
+/* Target the element you want to hide the scrollbar on */
+.no-scrollbar {
+    /* Modern standard: Firefox & Chrome 121+ */
+    scrollbar-width: none;
+    
+    /* Legacy IE and Edge */
+    -ms-overflow-style: none;  
+}
+
+/* Legacy Safari, Chrome, and Opera */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0; /* Sticks to the very top of its container when you scroll down */
+    z-index: 100; /* Ensures it stays on top of other content */
+
+    background-color: rgb(255 252 242); 
+    color: #ffffff;
+    padding: 0rem;
+    border-radius: 0.3rem;
+}
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
 
 
 html {
     background-color: #101014;
+    scroll-behavior: smooth;
 }
 
 body {

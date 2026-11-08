@@ -1,6 +1,6 @@
 
-
-
+DELETE FROM submissions where id = 18;
+SELECT * from submissions;
 
 /* ALTER TABLE users
 ADD COLUMN wallet_address VARCHAR(44)

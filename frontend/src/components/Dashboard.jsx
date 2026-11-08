@@ -119,13 +119,15 @@ export default function Dashboard() {
             <div className="max-w-5xl mx-auto">
 
                 {/* Header */}
-                <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-4">
-                        <img
-                            src="/sand_dollar_logo.png"
-                            alt="Sand Dollar"
-                            className="h-32 w-auto"
-                        />
+                <header className="sticky-header mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4 scroll-smooth">
+                        <a href="#" target="">
+                            <img
+                                src="/sand_dollar_logo.png"
+                                alt="Sand Dollar"
+                                className="h-32 w-auto"
+                            />
+                        </a>
                         <p className="text-[#0F4A3C]/70 hidden md:block">
                             Share your daily puzzles. Collect SAND.
                         </p>
@@ -250,7 +252,6 @@ export default function Dashboard() {
                         </div>
                     )}
                 </section>
-
             </div>
         </main>
     );

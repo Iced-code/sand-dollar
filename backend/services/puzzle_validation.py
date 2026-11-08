@@ -30,7 +30,8 @@ def validate_today_wordle(puzzle_number: int):
         raise RuntimeError("Today's official Wordle puzzle is unavailable")
 
     if int(expected) != puzzle_number:
-        raise ValueError(f"Incorrect puzzle number. Today's Wordle puzzle number is #{expected}.")
+        # raise ValueError(f"Incorrect puzzle number. Today's Wordle puzzle number is #{expected}.")
+        raise ValueError(f"Incorrect puzzle number.")
 
     return today
 
@@ -55,6 +56,7 @@ def validate_today_connections(puzzle_number: int):
 
     expected = (today - CONNECTIONS_LAUNCH_DATE).days + 1   # puzzle number and id from endpoint are not the same. instead checks puzzle number with days since launch
     if expected != puzzle_number:
-        raise ValueError(f"Incorrect puzzle number. Today's Connection puzzle number is #{expected}.")
+        # raise ValueError(f"Incorrect puzzle number. Today's Connection puzzle number is #{expected}.")
+        raise ValueError(f"Incorrect puzzle number.")
 
     return today

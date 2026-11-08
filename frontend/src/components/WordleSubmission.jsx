@@ -57,7 +57,7 @@ export default function WordleSubmission({ onSubmitted, todaysSubmission }) {
                     onChange={(e) => setRawResult(e.target.value)}
                     readOnly={!!submittedResult}
                     placeholder={"Wordle 1,234 5/6\n\n⬛🟨⬛⬛⬛\n⬛🟨⬛⬛🟩\n🟨🟩⬛⬛🟩\n🟩🟩🟨⬛🟩\n🟩🟩🟩🟩🟩"}
-                    className={`flex-1 min-h-[10rem] resize-none w-full rounded-2xl p-4 text-sm font-mono
+                    className={`no-scrollbar flex-1 min-h-[10rem] resize-none w-full rounded-2xl p-4 text-sm font-mono
                         border-2 text-[#0F4A3C] placeholder-[#0F4A3C]/35
                         focus:outline-none focus:border-[#3AAB8F] focus:ring-4 focus:ring-[#3AAB8F]/25
                         ${submittedResult
@@ -88,7 +88,7 @@ export default function WordleSubmission({ onSubmitted, todaysSubmission }) {
                                 rel="noopener noreferrer"
                                 className="inline-block text-sm font-bold underline underline-offset-4 mt-2 hover:text-[#F7E06D] focus:outline-none focus-visible:ring-2 focus-visible:ring-white rounded"
                             >
-                                View transaction on Solana Explorer ↗
+                                View transaction ↗
                             </a>
                         )}
                     </div>
