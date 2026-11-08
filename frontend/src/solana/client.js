@@ -7,3 +7,5 @@ export const solanaClient = createClient()
     .use(solanaRpc({
         rpcUrl: "https://api.devnet.solana.com"
     }));
+
+// DDrtiXyiqs4diFmqiACLfqtJd3LvSzEcnyMMFjYnz2zP

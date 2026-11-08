@@ -1,6 +1,6 @@
-
 import { useState } from "react";
 import { apiFetch } from "../api/client";
+import GameCard from "./GameCard";
 
 export default function ConnectionsSubmission({ onSubmitted, todaysSubmission }) {
     const [rawResult, setRawResult] = useState("");
@@ -9,6 +9,8 @@ export default function ConnectionsSubmission({ onSubmitted, todaysSubmission })
     const [success, setSuccess] = useState(null);
 
     const submittedResult = todaysSubmission || success;
+    // Only animate when the reward just arrived, not on every page load
+    const justSubmitted = !!success;
 
     async function handleSubmit(event) {
         event.preventDefault();
@@ -17,7 +19,7 @@ export default function ConnectionsSubmission({ onSubmitted, todaysSubmission })
         setSuccess(null);
 
         if (!rawResult.trim()) {
-            setError("Please paste your Connections result.");
+            setError("Paste your Connections result first.");
             return;
         }
 
@@ -26,12 +28,8 @@ export default function ConnectionsSubmission({ onSubmitted, todaysSubmission })
         try {
             const result = await apiFetch("/games/connections/submit", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    raw_result: rawResult
-                })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ raw_result: rawResult })
             });
 
             setSuccess(result);
@@ -48,51 +46,51 @@ export default function ConnectionsSubmission({ onSubmitted, todaysSubmission })
     }
 
     return (
-        <section className="bg-[#1c1c24] border border-white/10 rounded-2xl p-6 mb-10">
-            <div className="mb-5">
-                <h2 className="text-xl font-semibold">
-                    Connections
-                </h2>
-                <p className="text-gray-400 text-sm mt-2">
-                    Copy your Connections results and paste them below.
-                </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col">
-                <div>
-                    {/* <label className="block text-sm text-gray-300 mb-2">
-                        Connections Results
-                    </label> */}
-
-                    <textarea
-                        value={submittedResult ? todaysSubmission.raw_result : rawResult}
-                        onChange={(e) => setRawResult(e.target.value)}
-                        readOnly={!!submittedResult}
-                        placeholder={"Connections\nPuzzle #1245\n\n🟨🟨🟨🟨\n🟪🟦🟦🟪\n🟪🟦🟩🟩\n🟩🟦🟪🟦\n🟩🟪🟩🟪"}
-                        rows={8}
-                        className={`w-full bg-[#101014] border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400 font-mono text-sm 
-                            ${submittedResult ? "bg-gray-100 dark:bg-gray-800 opacity-80 resize-none" : "resize-y"}`}
-                        required
-                    />
-                </div>
+        <GameCard
+            title="Connections"
+            subtitle="Copy your result from Connections and paste it here."
+            done={!!submittedResult}
+        >
+            <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-4">
+                <textarea
+                    value={submittedResult ? submittedResult.raw_result : rawResult}
+                    onChange={(e) => setRawResult(e.target.value)}
+                    readOnly={!!submittedResult}
+                    placeholder={"Connections\nPuzzle #1245\n\n🟨🟨🟨🟨\n🟪🟦🟦🟪\n🟪🟦🟩🟩\n🟩🟦🟪🟦\n🟩🟪🟩🟪"}
+                    className={`flex-1 min-h-[10rem] resize-none w-full rounded-2xl p-4 text-sm font-mono
+                        border-2 text-[#0F4A3C] placeholder-[#0F4A3C]/35
+                        focus:outline-none focus:border-[#3AAB8F] focus:ring-4 focus:ring-[#3AAB8F]/25
+                        ${submittedResult
+                            ? "bg-[#FFF8D6] border-[#EFE3A6]"
+                            : "bg-[#FFFCF2] border-[#EFE3A6]"}`}
+                    required
+                />
 
                 {error && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 text-sm">
+                    <div role="alert" className="bg-red-50 border-2 border-red-200 text-red-700 rounded-2xl p-3 text-sm">
                         {error}
                     </div>
                 )}
 
                 {submittedResult && (
-                    <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-                        {/* <p className="text-green-400 font-semibold">
-                            Connections submitted successfully!
-                        </p> */}
-                        <p className="text-green-400 font-bold text-lg mt-2">
-                           +{submittedResult.reward_amount} SAND
+                    <div className={`bg-[#3AAB8F] text-white rounded-2xl p-4 ${justSubmitted ? "reward-pop" : ""}`}>
+                        <p className="font-display text-3xl font-semibold leading-none">
+                            +{submittedResult.reward_amount} SAND
                         </p>
-                        <p className="text-gray-400 text-sm mt-2">
-                            Puzzle #{submittedResult.result_data?.puzzle_number}
+                        <p className="text-white/90 text-sm mt-2">
+                            Connections #{submittedResult.result_data?.puzzle_number}
                         </p>
+
+                        {submittedResult.payout_status === "paid" && submittedResult.payout_signature && (
+                            <a
+                                href={`https://explorer.solana.com/tx/${submittedResult.payout_signature}?cluster=devnet`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-block text-sm font-bold underline underline-offset-4 mt-2 hover:text-[#F7E06D] focus:outline-none focus-visible:ring-2 focus-visible:ring-white rounded"
+                            >
+                                View transaction on Solana Explorer ↗
+                            </a>
+                        )}
                     </div>
                 )}
 
@@ -100,12 +98,14 @@ export default function ConnectionsSubmission({ onSubmitted, todaysSubmission })
                     <button
                         type="submit"
                         disabled={loading}
-                        className="bg-amber-400 hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold px-6 py-3 rounded-lg transition mt-auto"
+                        className="rounded-full bg-[#1A7560] hover:bg-[#0F4A3C] disabled:opacity-50 disabled:cursor-not-allowed
+                            text-white font-display font-semibold text-lg px-6 py-3 transition
+                            focus:outline-none focus-visible:ring-4 focus-visible:ring-[#3AAB8F]/40"
                     >
-                        {loading ? "Submitting..." : "Submit"}
+                        {loading ? "Sending your result..." : "Submit result"}
                     </button>
                 )}
             </form>
-        </section>
+        </GameCard>
     );
 }

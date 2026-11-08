@@ -43,6 +43,11 @@ class Submission(Base):
 
     submitted_at = Column(DateTime, server_default=func.now(), nullable=False)
 
+    payout_status = Column(String(20), nullable=False, default="not_requested")
+    payout_signature = Column(String(100), nullable=True)
+    payout_error = Column(Text, nullable=True)
+    paid_at = Column(DateTime, nullable=True)
+
 class WalletChallenge(Base):
     __tablename__ = "wallet_challenges"
 

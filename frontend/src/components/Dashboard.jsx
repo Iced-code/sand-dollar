@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { apiFetch } from "../api/client";
 
@@ -6,6 +5,7 @@ import WordleSubmission from "./WordleSubmission";
 import ConnectionsSubmission from "./ConnectionsSubmission";
 
 import PhantomWallet from "./PhantomWallet";
+import Leaderboard from "./Leaderboard";
 
 function getTodaysDate() {
     const parts = new Intl.DateTimeFormat("en-US", {
@@ -29,17 +29,17 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    const [balanceRefreshKey, setBalanceRefreshKey] = useState(0);
+
     useEffect(() => {
         async function loadDashboard() {
             try {
-                const [userData, balanceData, submissionData] =
-                    await Promise.all([
-                        apiFetch("/users/me"),
-                        apiFetch("/users/me/balance"),
-                        apiFetch("/users/me/submissions")
-                    ]);
-
+                const userData = await apiFetch("/users/me");
                 setUser(userData);
+
+                const balanceData = await apiFetch("/users/me/balance");
+                const submissionData = await apiFetch("/users/me/submissions");
+
                 setBalance(balanceData);
                 setSubmissions(submissionData);
             } catch (err) {
@@ -53,21 +53,28 @@ export default function Dashboard() {
     }, []);
 
     if (loading) {
-        return <div className="p-8 text-center">Loading dashboard...</div>;
+        return (
+            <div className="min-h-screen flex items-center justify-center font-display text-xl text-[#1A7560]">
+                Loading your dashboard...
+            </div>
+        );
     }
 
     if (error) {
-        return <div className="p-8 text-red-500">Error: {error}</div>;
+        return (
+            <div className="p-8 max-w-md mx-auto mt-16 bg-red-50 border-2 border-red-200 text-red-700 rounded-2xl">
+                Couldn't load your dashboard: {error}
+            </div>
+        );
     }
 
     async function handleSubmissionCreated(newSubmission) {
-        setSubmissions((previous) => [
-            newSubmission,
-            ...previous
-        ]);
+        setSubmissions((previous) => [newSubmission, ...previous]);
 
         const updatedBalance = await apiFetch("/users/me/balance");
         setBalance(updatedBalance);
+
+        setBalanceRefreshKey((previous) => previous + 1);
     }
 
     const today = getTodaysDate();
@@ -79,15 +86,11 @@ export default function Dashboard() {
     );
 
     function getGameName(submission) {
-        return submission.result_data.game
-        /* return submission.result_data.game === "Connections"
-            ? "Connections"
-            : "Wordle"; */
+        return submission.result_data.game;
     }
 
     function getSubmissionTitle(submission) {
-        const gameName = getGameName(submission);
-        return `${gameName} #${submission.result_data.puzzle_number}`;
+        return `${getGameName(submission)} #${submission.result_data.puzzle_number}`;
     }
 
     function getSubmissionDescription(submission) {
@@ -105,65 +108,63 @@ export default function Dashboard() {
         }
     }
 
+    function gameChipClass(submission) {
+        return getGameName(submission) === "Connections"
+            ? "bg-[#F7E06D] text-[#0F4A3C]"
+            : "bg-[#3AAB8F]/20 text-[#0F4A3C]";
+    }
+
     return (
-        <main className="min-h-screen bg-[#101014] text-white p-6 md:p-10">
+        <main className="min-h-screen bg-[#FFFCF2] text-[#0F4A3C] p-6 md:p-10">
             <div className="max-w-5xl mx-auto">
 
                 {/* Header */}
-                <header className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold">
-                            Sand Dollar
-                        </h1>
-                        <p className="text-gray-400 mt-2">
-                            Your puzzle activity at a glance.
+                <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4">
+                        <img
+                            src="/sand_dollar_logo.png"
+                            alt="Sand Dollar"
+                            className="h-32 w-auto"
+                        />
+                        <p className="text-[#0F4A3C]/70 hidden md:block">
+                            Share your daily puzzles. Collect SAND.
                         </p>
                     </div>
 
-                    <PhantomWallet />
+                    <PhantomWallet balanceRefreshKey={balanceRefreshKey} />
                 </header>
 
-                {/* User and balance */}
-                <section className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
-
-                    <div className="bg-[#1c1c24] rounded-2xl p-6 border border-white/10">
-                        <p className="text-gray-400 text-sm">
-                            Welcome back
+                {/* Hero: balance on a sand blob (the one loud element on the page) */}
+                <section className="speckled bg-[#F7E06D] rounded-[2.5rem_3.5rem_2.5rem_4rem] p-8 md:p-10 mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <p className="text-[#0F4A3C]/80 font-semibold">
+                            Welcome back, {user.username}
                         </p>
 
-                        <h2 className="text-2xl font-semibold mt-2">
-                            {user.username}
-                        </h2>
-
-                        <p className="text-gray-500 text-xs mt-3">
-                            Player ID: {user.public_id}
-                        </p>
-                    </div>
-
-                    <div className="bg-[#1c1c24] rounded-2xl p-6 border border-white/10">
-                        <p className="text-gray-400 text-sm">
-                            Your SAND balance
-                        </p>
-
-                        <div className="flex items-baseline gap-2 mt-2">
-                            <span className="text-4xl font-bold text-amber-400">
+                        <div className="flex items-baseline gap-3 mt-2">
+                            <span className="font-display text-6xl md:text-7xl font-bold text-[#1A7560] leading-none">
                                 {Number(balance.balance).toLocaleString()}
                             </span>
-
-                            <span className="text-amber-400 font-semibold">
+                            <span className="font-display text-2xl font-semibold text-[#3AAB8F]">
                                 SAND
                             </span>
                         </div>
-
-                        <p className="text-gray-500 text-xs mt-3">
-                            Earn more by completing daily puzzles.
-                        </p>
                     </div>
 
+                    <div className="md:text-right">
+                        <p className="text-[#0F4A3C] font-semibold">
+                            Submit today's puzzles to earn more.
+                        </p>
+                        <p className="text-[#0F4A3C]/60 text-xs mt-2">
+                            Player ID: {user.public_id}
+                        </p>
+                    </div>
                 </section>
 
-                {/* Game Cards */}
-                <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
+                <Leaderboard />
+
+                {/* Game cards */}
+                <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 auto-rows-fr gap-6 mb-12">
 
                     <WordleSubmission
                         onSubmitted={handleSubmissionCreated}
@@ -175,39 +176,38 @@ export default function Dashboard() {
                         todaysSubmission={connectionsTodaySubmission}
                     />
 
-                    {/* Future Game Card */}
-                    <div className="bg-[#1c1c24] border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[350px] border-dashed">
-                        <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                            <span className="text-3xl text-gray-500">+</span>
+                    {/* Future game card */}
+                    <div className="border-2 border-dashed border-[#D4C06A] rounded-[2rem] p-6 flex flex-col items-center justify-center h-full min-h-[440px] text-center">
+                        <div className="w-14 h-14 rounded-full bg-[#F7E06D]/60 flex items-center justify-center mb-4">
+                            <span className="font-display text-3xl text-[#1A7560]">🦐</span>
                         </div>
 
-                        <h2 className="text-lg font-semibold text-gray-400">
-                            More Games Coming Soon
+                        <h2 className="font-display text-xl font-semibold text-[#1A7560] sand-heading">
+                            Krillion<br/>coming soon!
                         </h2>
-
-                        <p className="text-gray-500 text-sm mt-2 text-center">
-                            More ways to earn SAND are on the way.
-                        </p>
                     </div>
 
                 </section>
 
                 {/* Submission history */}
                 <section>
-                    <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-xl font-semibold">
-                            Recent Activity
+                    <div className="flex items-baseline justify-between mb-5">
+                        <h2 className="font-display text-2xl font-semibold text-[#1A7560] sand-heading">
+                            Recent activity
                         </h2>
 
-                        <span className="text-gray-500 text-sm">
-                            {submissions.length} submissions
+                        <span className="text-[#0F4A3C]/60 text-sm">
+                            {submissions.length} {submissions.length === 1 ? "submission" : "submissions"}
                         </span>
                     </div>
 
                     {submissions.length === 0 ? (
-                        <div className="bg-[#1c1c24] rounded-2xl p-8 text-center">
-                            <p className="text-gray-400">
-                                No puzzle submissions yet.
+                        <div className="speckled bg-[#FFF8D6] rounded-3xl p-10 text-center">
+                            <p className="font-display text-xl text-[#1A7560]">
+                                Nothing here yet
+                            </p>
+                            <p className="text-[#0F4A3C]/70 mt-1">
+                                Paste today's Wordle or Connections result above to earn your first SAND.
                             </p>
                         </div>
                     ) : (
@@ -215,30 +215,31 @@ export default function Dashboard() {
                             {submissions.map((submission) => (
                                 <div
                                     key={submission.id}
-                                    className="bg-[#1c1c24] rounded-xl p-5 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                                    className="bg-white border-2 border-[#EFE3A6] rounded-3xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
                                 >
                                     <div>
-                                        <h3 className="font-semibold">
-                                            {getSubmissionTitle(submission)}
-                                        </h3>
+                                        <div className="flex items-center gap-3 flex-wrap">
+                                            <h3 className="font-display text-lg font-semibold">
+                                                {getSubmissionTitle(submission)}
+                                            </h3>
+                                            <span className={`rounded-full text-xs font-bold px-2.5 py-0.5 ${gameChipClass(submission)}`}>
+                                                {new Date(
+                                                    submission.puzzle_date + "T00:00:00"
+                                                ).toLocaleDateString()}
+                                            </span>
+                                        </div>
 
-                                        <p className="text-gray-400 text-sm mt-1">
-                                            {new Date(
-                                                submission.puzzle_date + "T00:00:00"
-                                            ).toLocaleDateString()}
-                                        </p>
-
-                                        <p className="text-gray-500 text-sm mt-1">
+                                        <p className="text-[#0F4A3C]/70 text-sm mt-1">
                                             {getSubmissionDescription(submission)}
                                         </p>
                                     </div>
 
                                     <div className="text-left md:text-right">
-                                        <p className="text-amber-400 font-bold text-lg">
+                                        <p className="inline-block rounded-full bg-[#F7E06D] px-4 py-1 font-display text-lg font-semibold text-[#1A7560]">
                                             +{submission.reward_amount} SAND
                                         </p>
 
-                                        <p className="text-gray-500 text-xs">
+                                        <p className="text-[#0F4A3C]/55 text-xs mt-1">
                                             {new Date(
                                                 submission.submitted_at
                                             ).toLocaleString()}

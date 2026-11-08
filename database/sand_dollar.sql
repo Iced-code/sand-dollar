@@ -1,3 +1,7 @@
+
+
+
+
 /* ALTER TABLE users
 ADD COLUMN wallet_address VARCHAR(44)
 CHARACTER SET ascii
@@ -29,9 +33,32 @@ ADD COLUMN wallet_address VARCHAR(44) NOT NULL; */
 # select * from wallet_challenges;
 # DELETE FROM wallet_challenges where id;
 
+/*ALTER TABLE submissions
+ADD COLUMN payout_status VARCHAR(20) NOT NULL DEFAULT 'not_requested',
+ADD COLUMN payout_signature VARCHAR(100) NULL,
+ADD COLUMN payout_error TEXT NULL,
+ADD COLUMN paid_at DATETIME NULL;
+
+describe submissions; */
+
+/*select * from wallet_challenges;
 select * from users;
-# DELETE FROM submissions WHERE game_id;
+SELECT
+    id,
+    reward_amount,
+    payout_status,
+    payout_signature,
+    payout_error,
+    paid_at
+FROM submissions
+ORDER BY id DESC
+LIMIT 5; */
 # select * from submissions;
+
+
+# '0b9de5fe-98cd-4160-b0c9-a191d8734115'
+
+
 
 /*INSERT INTO games (name, slug, parser_key, is_active)
 VALUES ('Wordle', 'wordle', 'wordle', TRUE); */

@@ -24,6 +24,9 @@ import base64, base58
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 
+import asyncio
+from decimal import Decimal
+from services.sand_payout import transfer_sand
 
 app = FastAPI()
 
@@ -34,6 +37,50 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+
+def process_submission_payout(
+    db: Session,
+    user: User,
+    submission: Submission
+):
+    # No reward means no blockchain transaction is needed.
+    if submission.reward_amount <= 0:
+        submission.payout_status = "not_requested"
+        db.commit()
+        return
+
+    # A wallet must be linked before sending a reward.
+    if not user.wallet_address:
+        submission.payout_status = "failed"
+        submission.payout_error = "No wallet linked to this account."
+        db.commit()
+        return
+
+    # Mark the payout as processing before attempting the transfer.
+    submission.payout_status = "processing"
+    submission.payout_error = None
+    db.commit()
+
+    try:
+        result = asyncio.run(
+            transfer_sand(
+                recipient_address=user.wallet_address,
+                amount=Decimal(str(submission.reward_amount))
+            )
+        )
+
+        submission.payout_status = "paid"
+        submission.payout_signature = result["signature"]
+        submission.paid_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        submission.payout_error = None
+
+    except Exception as e:
+        submission.payout_status = "failed"
+        submission.payout_error = str(e)
+
+    db.commit()
+
 
 @app.get("/")
 def root():
@@ -149,6 +196,9 @@ def submit_wordle(submission: SubmissionCreate, user_id: UUID = Header(..., alia
         db.rollback()
         raise HTTPException(status_code=409, detail="You have already submitted this Wordle puzzle")
 
+    process_submission_payout(db=db, user=user, submission=new_submission)
+    db.refresh(new_submission)
+
     return new_submission
 
 @app.post("/games/connections/submit", response_model=SubmissionResponse)
@@ -210,6 +260,9 @@ def submit_connections(submission: SubmissionCreate, user_id: UUID = Header(...,
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=409, detail="You have already submitted this Connections puzzle")
+
+    process_submission_payout(db=db, user=user, submission=new_submission)
+    db.refresh(new_submission)
 
     return new_submission
 
@@ -353,3 +406,32 @@ def verify_wallet(request: WalletVerifyRequest, user_id: UUID = Header(..., alia
         "message": "Wallet successfully linked",
         "wallet_address": user.wallet_address
     }
+
+@app.get("/leaderboard")
+def get_leaderboard(db: Session = Depends(get_db)):
+
+    results = db.query(
+        User.username,
+        func.sum(Submission.reward_amount).label("total_earned"),
+        func.count(Submission.id).label("payout_count")
+    ).join(
+        Submission,
+        Submission.user_id == User.id
+    ).filter(
+        Submission.payout_status == "paid"
+    ).group_by(
+        User.id,
+        User.username
+    ).order_by(
+        func.sum(Submission.reward_amount).desc()
+    ).limit(10).all()
+
+    return [
+        {
+            "rank": index + 1,
+            "username": result.username,
+            "total_earned": int(result.total_earned),
+            "payout_count": result.payout_count
+        }
+        for index, result in enumerate(results)
+    ]

@@ -21,6 +21,11 @@ class SubmissionResponse(BaseModel):
     reward_amount: int
     submitted_at: datetime
 
+    payout_status: str
+    payout_signature: str | None = None
+    payout_error: str | None = None
+    paid_at: datetime | None = None
+
     model_config = ConfigDict(from_attributes=True)
 
 class WalletChallengeRequest(BaseModel):
