@@ -7,6 +7,8 @@ import ConnectionsSubmission from "./ConnectionsSubmission";
 import PhantomWallet from "./PhantomWallet";
 import Leaderboard from "./Leaderboard";
 
+import WelcomeModal from "./WelcomeModal"
+
 function getTodaysDate() {
     const parts = new Intl.DateTimeFormat("en-US", {
         timeZone: "America/New_York",
@@ -30,6 +32,23 @@ export default function Dashboard() {
     const [error, setError] = useState("");
 
     const [balanceRefreshKey, setBalanceRefreshKey] = useState(0);
+
+    const [showWelcome, setShowWelcome] = useState(() => {
+        try {
+            return !localStorage.getItem("sanddollar_welcomed");
+        } catch {
+            return true;
+        }
+    });
+
+    function closeWelcome() {
+        setShowWelcome(false);
+        try {
+            localStorage.setItem("sanddollar_welcomed", "1");
+        } catch {
+            // storage unavailable (e.g. private mode); the popup just shows again next visit
+    }
+    }
 
     useEffect(() => {
         async function loadDashboard() {
@@ -116,6 +135,8 @@ export default function Dashboard() {
 
     return (
         <main className="min-h-screen bg-[#FFFCF2] text-[#0F4A3C] p-6 md:p-10">
+            {showWelcome && <WelcomeModal onClose={closeWelcome} />}
+            
             <div className="max-w-5xl mx-auto">
 
                 {/* Header */}
@@ -131,6 +152,13 @@ export default function Dashboard() {
                         <p className="text-[#0F4A3C]/70 hidden md:block">
                             Share your daily puzzles. Collect SAND.
                         </p>
+
+                        <button
+                            onClick={() => setShowWelcome(true)}
+                            className="text-sm font-semibold text-[#1A7560] underline underline-offset-4 hover:text-[#0F4A3C] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#3AAB8F]/40 rounded"
+                        >
+                            How it works
+                        </button>
                     </div>
 
                     <PhantomWallet balanceRefreshKey={balanceRefreshKey} />
