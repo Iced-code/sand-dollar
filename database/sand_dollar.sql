@@ -1,6 +1,9 @@
 
-DELETE FROM submissions where id = 18;
+# DELETE FROM submissions where id = 18;
 SELECT * from submissions;
+
+SELECT * from users;
+SELECT * FROM wallet_challenges;
 
 /* ALTER TABLE users
 ADD COLUMN wallet_address VARCHAR(44)
