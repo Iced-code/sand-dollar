@@ -16,12 +16,6 @@ export default function GameCard({ title, subtitle, done = false, children }) {
                         </span>
                     )}
                 </div>
-
-                {/* {done && (
-                    <span className="shrink-0 rounded-full bg-[#F7E06D] text-[#0F4A3C] text-xs font-bold px-3 py-1">
-                        Done for today
-                    </span>
-                )} */}
             </div>
 
             {children}
