@@ -48,7 +48,7 @@ export default function ConnectionsSubmission({ onSubmitted, todaysSubmission })
     return (
         <GameCard
             title="Connections"
-            subtitle="Copy your result from Connections and paste it here."
+            subtitle="Copy your result from today's Connections and paste it here."
             done={!!submittedResult}
         >
             <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-4">

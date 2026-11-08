@@ -48,7 +48,7 @@ export default function WordleSubmission({ onSubmitted, todaysSubmission }) {
     return (
         <GameCard
             title="Wordle"
-            subtitle="Copy your result from Wordle and paste it here."
+            subtitle="Copy your result from today's Wordle and paste it here."
             done={!!submittedResult}
         >
             <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-4">
