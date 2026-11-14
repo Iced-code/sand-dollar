@@ -24,7 +24,7 @@ const secondaryButton =
     "hover:bg-[#FFF8D6] disabled:cursor-not-allowed disabled:opacity-50 " +
     "focus:outline-none focus-visible:ring-4 focus-visible:ring-[#3AAB8F]/40";
 
-export default function PhantomWallet({ balanceRefreshKey }) {
+export default function PhantomWallet({ refreshKey }) {
     const client = useClient();
 
     const wallets = useWallets(client);
@@ -97,7 +97,7 @@ export default function PhantomWallet({ balanceRefreshKey }) {
         else {
             setSandBalance(null);
         }
-    }, [connected?.account?.address, balanceRefreshKey]);
+    }, [connected?.account?.address, refreshKey]);
 
     async function handleVerify() {
         if (!connected) return;

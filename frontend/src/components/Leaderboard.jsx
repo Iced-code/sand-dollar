@@ -9,7 +9,7 @@ function rankBadgeClass(rank) {
     return "bg-transparent text-[#0F4A3C]/55";
 }
 
-export default function Leaderboard() {
+export default function Leaderboard(refreshKey,  username) {
     const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -27,7 +27,7 @@ export default function Leaderboard() {
         }
 
         loadLeaderboard();
-    }, []);
+    }, [refreshKey]);
 
     return (
         <section className="bg-white border-2 border-[#EFE3A6] rounded-[2rem] p-6 mb-10 shadow-[0_6px_0_#EFE3A6]">
@@ -74,7 +74,7 @@ export default function Leaderboard() {
                                 >
                                     {player.rank}
                                 </span>
-                                <span className="font-semibold text-[#0F4A3C]">
+                                <span className={`font-semibold text-[#0F4A3C]`}>
                                     {player.username}
                                 </span>
                             </div>

@@ -17,12 +17,12 @@ CONNECTIONS_REWARDS = {
 
 def calculate_wordle_reward(result: dict) -> int:
     if not result["won"]:
-        return 0
+        return 50
 
     return WORDLE_REWARDS.get(result["attempts"], 0)
 
 def calculate_connections_reward(result: dict) -> int:
     if not result["won"]:
-        return 0
+        return 50
 
     return CONNECTIONS_REWARDS.get(result["mistakes"], 0)

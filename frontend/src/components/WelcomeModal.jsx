@@ -50,11 +50,6 @@ export default function WelcomeModal({ onClose }) {
             >
                 {/* Sand blob header */}
                 <div className="speckled bg-[#F7E06D] px-8 pt-8 pb-7 rounded-b-[2.5rem] text-center">
-                    {/* <img
-                        src="/sand-dollar-logo.png"
-                        alt="Sand Dollar"
-                        className="h-14 w-auto mx-auto"
-                    /> */}
                     <h2
                         id="welcome-title"
                         className="sand-heading font-display text-3xl font-bold mt-4"

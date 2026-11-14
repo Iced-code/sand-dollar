@@ -31,7 +31,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    const [balanceRefreshKey, setBalanceRefreshKey] = useState(0);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const [showWelcome, setShowWelcome] = useState(() => {
         try {
@@ -93,7 +93,7 @@ export default function Dashboard() {
         const updatedBalance = await apiFetch("/users/me/balance");
         setBalance(updatedBalance);
 
-        setBalanceRefreshKey((previous) => previous + 1);
+        setRefreshKey((previous) => previous + 1);
     }
 
     const today = getTodaysDate();
@@ -161,7 +161,7 @@ export default function Dashboard() {
                         </button>
                     </div>
 
-                    <PhantomWallet balanceRefreshKey={balanceRefreshKey} />
+                    <PhantomWallet refreshKey={refreshKey} />
                 </header>
 
                 {/* Hero: balance on a sand blob (the one loud element on the page) */}
@@ -191,7 +191,7 @@ export default function Dashboard() {
                     </div>
                 </section>
 
-                <Leaderboard />
+                <Leaderboard refreshKey={refreshKey} username={user.username}/>
 
                 {/* Game cards */}
                 <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 auto-rows-fr gap-6 mb-12">
@@ -269,11 +269,11 @@ export default function Dashboard() {
                                             +{submission.reward_amount} SAND
                                         </p>
 
-                                        <p className="text-[#0F4A3C]/55 text-xs mt-1">
+                                        {/* <p className="text-[#0F4A3C]/55 text-xs mt-1">
                                             {new Date(
                                                 submission.submitted_at
                                             ).toLocaleString()}
-                                        </p>
+                                        </p> */}
                                     </div>
                                 </div>
                             ))}
