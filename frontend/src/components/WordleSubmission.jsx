@@ -8,6 +8,8 @@ export default function WordleSubmission({ onSubmitted, todaysSubmission }) {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(null);
 
+    const [output, setOutput] = useState("");
+
     const submittedResult = todaysSubmission || success;
     // Only animate when the reward just arrived, not on every page load
     const justSubmitted = !!success;
@@ -45,6 +47,12 @@ export default function WordleSubmission({ onSubmitted, todaysSubmission }) {
         }
     }
 
+    function buildSubmission(result_data){
+        // setOutput(`${result_data["game"]} ${result_data["puzzle_number"]} ${result_data["attempts"]}/6`);
+
+        return output;
+    }
+
     return (
         <GameCard
             title="Wordle"
@@ -53,7 +61,7 @@ export default function WordleSubmission({ onSubmitted, todaysSubmission }) {
         >
             <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-4">
                 <textarea
-                    value={submittedResult ? submittedResult.raw_result : rawResult}
+                    value={submittedResult ? submittedResult.rawResult : rawResult}
                     onChange={(e) => setRawResult(e.target.value)}
                     readOnly={!!submittedResult}
                     placeholder={"Wordle 1,234 5/6\n\n⬛🟨⬛⬛⬛\n⬛🟨⬛⬛🟩\n🟨🟩⬛⬛🟩\n🟩🟩🟨⬛🟩\n🟩🟩🟩🟩🟩"}
@@ -64,6 +72,7 @@ export default function WordleSubmission({ onSubmitted, todaysSubmission }) {
                             ? "bg-[#FFF8D6] border-[#EFE3A6]"
                             : "bg-[#FFFCF2] border-[#EFE3A6]"}`}
                     required
+                    id={"wordleSubmissionField"}
                 />
 
                 {error && (
