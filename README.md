@@ -45,6 +45,8 @@ Millions of people play puzzle games like Wordle and Connections everyday. Sand 
 | Frontend | React, Tailwind CSS |
 | Wallet | Phantom, `@solana/kit-plugin-wallet`, `@solana/react` |
 | Backend | FastAPI (Python) |
+| Database | MySQL |
+| Containerization | Docker, Docker Compose |
 | Blockchain | Solana (devnet), SAND token |
 | Fonts | Fredoka and Nunito |
 
@@ -73,6 +75,7 @@ The frontend talks to the backend through these endpoints:
 - Python 3.10+
 - The [Phantom](https://phantom.app) browser extension, set to **Devnet**
   (Settings → Developer Settings → Testnet Mode, then choose Solana Devnet)
+- [Docker](https://www.docker.com/get-started) and Docker Compose
 
 ### Backend
 
@@ -84,15 +87,6 @@ pip install -r requirements.txt
 cp .env.example .env  # TODO: list required variables below
 uvicorn main:app --reload   # TODO: confirm module path
 ```
-
-Environment variables (TODO: fill in):
-
-| Variable | Description |
-| --- | --- |
-| `TODO` | e.g. Solana RPC URL |
-| `TODO` | e.g. payout wallet keypair |
-| `TODO` | e.g. SAND token mint address |
-| `TODO` | e.g. database URL |
 
 ### Frontend
 
